@@ -8,7 +8,7 @@
 
 exports.handler = function (context, event, callback) {
   // REMINDER: This identity is only for prototyping purposes
-  const IDENTITY = 'the_user_id';
+  const IDENTITY = event.identity || 'demo_user';
 
   const { ACCOUNT_SID } = context;
 
