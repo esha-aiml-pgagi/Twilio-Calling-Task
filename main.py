@@ -162,3 +162,63 @@ async def recording_callback(request: Request):
     cur.close()
     conn.close()
     return {"message": "Callback processed successfully"}
+
+
+# --- Update Call Record Endpoint (including status, excluding recordings) ---
+class CallUpdate(BaseModel):
+    receiver_first_name: Optional[str] = None
+    receiver_last_name: Optional[str] = None
+    number: Optional[str] = None
+    company: Optional[str] = None
+    description: Optional[str] = None
+    personal_notes: Optional[str] = None
+    status: Optional[str] = None  # Allow updating status
+
+@app.put("/calls/{call_id}")
+def update_call(call_id: int, update: CallUpdate):
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # Fetch existing record
+    cur.execute("SELECT * FROM call_recordings WHERE id = %s", (call_id,))
+    record = cur.fetchone()
+    if not record:
+        cur.close()
+        conn.close()
+        raise HTTPException(status_code=404, detail="Call record not found")
+
+    # Prepare update dictionary
+    update_data = update.dict(exclude_unset=True)
+    if not update_data:
+        cur.close()
+        conn.close()
+        return {"message": "No fields to update"}
+
+    # Handle status separately if provided
+    statuses = None
+    if "status" in update_data:
+        statuses = update_data.pop("status")
+
+    # Build dynamic SQL for other fields
+    set_clauses = []
+    values = []
+    for field, value in update_data.items():
+        set_clauses.append(f"{field} = %s")
+        values.append(value)
+
+    if set_clauses:
+        values.append(call_id)
+        sql = f"UPDATE call_recordings SET {', '.join(set_clauses)} WHERE id = %s"
+        cur.execute(sql, values)
+
+    # Append new status to statuses array if provided
+    if statuses:
+        cur.execute("SELECT statuses FROM call_recordings WHERE id = %s", (call_id,))
+        current_statuses = cur.fetchone()[0] or []
+        current_statuses.append(statuses)
+        cur.execute("UPDATE call_recordings SET statuses = %s WHERE id = %s", (current_statuses, call_id))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"message": f"Call record {call_id} updated successfully", "updated_fields": list(update.dict(exclude_unset=True).keys())}
