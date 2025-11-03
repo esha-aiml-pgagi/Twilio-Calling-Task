@@ -11,33 +11,29 @@ exports.handler = function (context, event, callback) {
   const twiml = new Twilio.twiml.VoiceResponse();
 
   if (event.To) {
-    /*
-     * Determine if the destination is a phone number or a client name.
-     * If it's a number, use the <Number> noun; otherwise use <Client>.
-     */
     const attr = isAValidPhoneNumber(event.To) ? 'number' : 'client';
 
-    // --- TwiML <Dial> verb configuration ---
+    // Encode the number to send to backend
+    const destinationNumber = encodeURIComponent(event.To);
+
+    // Pass the number in the callback URL
+    const callbackUrl = `https://asa-dilatate-typically.ngrok-free.dev/recordings/callback?DestNumber=${destinationNumber}`;
+
     const dial = twiml.dial({
       answerOnBridge: true,
       callerId: process.env.CALLER_ID,
-
-      // --- Recording Settings ---
-      record: 'record-from-answer-dual', // start recording once answered
-      recordingTrack: 'both', // record both caller + callee
-      recordingStatusCallback: 'https://asa-dilatate-typically.ngrok-free.dev/recordings/callback', // change to your FastAPI endpoint
+      record: 'record-from-answer-dual',
+      recordingTrack: 'both',
+      recordingStatusCallback: callbackUrl,
       recordingStatusCallbackMethod: 'POST',
       recordingStatusCallbackEvent: ['completed', 'failed'],
     });
 
-    // Add the destination (number or client)
     dial[attr]({}, event.To);
 
   } else {
-    // Default fallback if no destination is provided
     twiml.say('Thanks for calling! No destination number or client specified.');
   }
 
-  // Return the TwiML to Twilio
   callback(null, twiml);
 };
