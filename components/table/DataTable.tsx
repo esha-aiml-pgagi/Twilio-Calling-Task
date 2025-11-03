@@ -71,7 +71,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
   };
 
   return (
-    <div className="content-card p-6" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
+    <div className="content-card p-6 animate-slideUp-delay-1" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
       <div className="table-wrapper-no-scrollbar">
         <Table>
           <TableHeader>

@@ -64,10 +64,10 @@ export function NotesCell({ value, onChange }: NotesCellProps) {
           onClick={handleClickOutside}
         >
           <div
-            className="bg-white/95 backdrop-blur-md rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 animate-in zoom-in-95 duration-300"
+            className="glass-liquid-container glass-liquid-surface bg-white/95 backdrop-blur-md rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 animate-liquid-glass-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start gap-3">
+            <div className="glass-liquid-content flex items-start gap-3">
               <textarea
                 ref={textareaRef}
                 value={tempValue}
@@ -78,7 +78,7 @@ export function NotesCell({ value, onChange }: NotesCellProps) {
               />
               <button
                 onClick={handleConfirm}
-                className="flex-shrink-0 p-2 hover:bg-accent rounded-md transition-colors duration-200"
+                className="flex-shrink-0 p-2 hover:bg-accent rounded-md transition-colors duration-200 z-20"
                 aria-label="Confirm notes"
               >
                 <ArrowRight className="h-5 w-5 text-primary" />

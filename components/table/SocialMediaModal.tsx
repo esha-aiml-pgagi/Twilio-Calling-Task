@@ -22,6 +22,18 @@ export function SocialMediaModal({
 }: SocialMediaModalProps) {
   if (!contact) return null;
 
+  // Extract Facebook and Twitter from socialMedia array
+  const facebookFromArray = contact.socialMedia?.find(s => s.platform.toLowerCase().includes('facebook'))?.url;
+  const twitterFromArray = contact.socialMedia?.find(s => s.platform.toLowerCase().includes('twitter'))?.url;
+  
+  const socialLinks = [
+    { platform: "Personal LinkedIn", url: contact.personLinkedIn },
+    { platform: "Company LinkedIn", url: contact.companyLinkedin },
+    { platform: "Website", url: contact.website },
+    { platform: "Facebook", url: contact.facebookUrl || facebookFromArray },
+    { platform: "Twitter", url: contact.twitterUrl || twitterFromArray },
+  ].filter((link) => link.url && link.url.trim() !== "");
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md transition-all duration-300 modal-background">
@@ -29,13 +41,13 @@ export function SocialMediaModal({
           <DialogTitle>Social Media Links - {contact.name}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          {contact.socialMedia.length === 0 ? (
+          {socialLinks.length === 0 ? (
             <p className="text-center text-muted-foreground italic">
               No social media links available
             </p>
           ) : (
             <div className="space-y-3">
-              {contact.socialMedia.map((link, index) => (
+              {socialLinks.map((link, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-all duration-200"

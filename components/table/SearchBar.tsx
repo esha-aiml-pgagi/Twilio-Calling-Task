@@ -18,6 +18,10 @@ interface SearchBarProps {
     countries: string[];
     companyCountries: string[];
     states: string[];
+    cities: string[];
+    companyStates: string[];
+    companyCities: string[];
+    technologies: string[];
   };
   onApplyFilters: (filters: {
     titles: string[];
@@ -25,6 +29,10 @@ interface SearchBarProps {
     countries: string[];
     companyCountries: string[];
     states: string[];
+    cities: string[];
+    companyStates: string[];
+    companyCities: string[];
+    technologies: string[];
   }) => void;
 }
 
@@ -67,7 +75,7 @@ export function SearchBar({
   };
 
   return (
-    <div className="content-card p-6 mb-6">
+    <div className="content-card p-6 mb-6 animate-slideUp">
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

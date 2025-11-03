@@ -9,6 +9,10 @@ export function filterContacts(
     countries: string[];
     companyCountries: string[];
     states: string[];
+    cities: string[];
+    companyStates: string[];
+    companyCities: string[];
+    technologies: string[];
   }
 ): Contact[] {
   return contacts.filter((contact) => {
@@ -35,6 +39,17 @@ export function filterContacts(
       filters.companyCountries.includes(contact.companyCountry);
     const matchesState =
       filters.states.length === 0 || filters.states.includes(contact.state);
+    const matchesCity =
+      filters.cities.length === 0 || filters.cities.includes(contact.city);
+    const matchesCompanyState =
+      filters.companyStates.length === 0 ||
+      filters.companyStates.includes(contact.companyState);
+    const matchesCompanyCity =
+      filters.companyCities.length === 0 ||
+      filters.companyCities.includes(contact.companyCity);
+    const matchesTechnologies =
+      filters.technologies.length === 0 ||
+      filters.technologies.includes(contact.technologies || "");
 
     return (
       matchesSearch &&
@@ -42,7 +57,11 @@ export function filterContacts(
       matchesCompany &&
       matchesCountry &&
       matchesCompanyCountry &&
-      matchesState
+      matchesState &&
+      matchesCity &&
+      matchesCompanyState &&
+      matchesCompanyCity &&
+      matchesTechnologies
     );
   });
 }

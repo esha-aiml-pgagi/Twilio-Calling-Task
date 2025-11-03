@@ -90,7 +90,7 @@ export function ExpandableAddressCell({
           aria-label={isExpanded ? "Collapse address" : "Expand address"}
         >
           <ChevronDown
-            className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${
+            className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ease-out ${
               isExpanded ? "rotate-180" : ""
             }`}
           />
@@ -100,49 +100,51 @@ export function ExpandableAddressCell({
       {isExpanded && (
         <div 
           ref={cardRef}
-          className={`absolute left-0 ${
+          className={`glass-liquid-container absolute left-0 ${
             openUpward ? 'bottom-full mb-2' : 'top-full mt-2'
-          } z-40 bg-white/95 backdrop-blur-md border rounded-lg shadow-lg p-4 min-w-[250px] transition-all duration-300 ease-in-out ${
+          } z-40 glass-liquid-surface bg-white/95 backdrop-blur-md border rounded-lg shadow-lg p-4 min-w-[250px] transition-all duration-300 ease-in-out animate-liquid-glass-in ${
             isClosing 
               ? `opacity-0 scale-95 ${openUpward ? 'translate-y-2' : '-translate-y-2'}` 
               : 'opacity-100 scale-100 translate-y-0'
           }`}
         >
-          {type === "personal" ? (
-            <div className="space-y-2">
-              <div className="text-sm">
-                <span className="font-medium">City:</span>{" "}
-                <span className="text-muted-foreground">{city || "N/A"}</span>
+          <div className="glass-liquid-content">
+            {type === "personal" ? (
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium">City:</span>{" "}
+                  <span className="text-muted-foreground">{city || "N/A"}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">State:</span>{" "}
+                  <span className="text-muted-foreground">{state || "N/A"}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">Country:</span>{" "}
+                  <span className="text-muted-foreground">{country || "N/A"}</span>
+                </div>
               </div>
-              <div className="text-sm">
-                <span className="font-medium">State:</span>{" "}
-                <span className="text-muted-foreground">{state || "N/A"}</span>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium">Address:</span>{" "}
+                  <span className="text-muted-foreground">{fullAddress || "N/A"}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">City:</span>{" "}
+                  <span className="text-muted-foreground">{companyCity || "N/A"}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">State:</span>{" "}
+                  <span className="text-muted-foreground">{companyState || "N/A"}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">Country:</span>{" "}
+                  <span className="text-muted-foreground">{companyCountry || "N/A"}</span>
+                </div>
               </div>
-              <div className="text-sm">
-                <span className="font-medium">Country:</span>{" "}
-                <span className="text-muted-foreground">{country || "N/A"}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="text-sm">
-                <span className="font-medium">Address:</span>{" "}
-                <span className="text-muted-foreground">{fullAddress || "N/A"}</span>
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">City:</span>{" "}
-                <span className="text-muted-foreground">{companyCity || "N/A"}</span>
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">State:</span>{" "}
-                <span className="text-muted-foreground">{companyState || "N/A"}</span>
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Country:</span>{" "}
-                <span className="text-muted-foreground">{companyCountry || "N/A"}</span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

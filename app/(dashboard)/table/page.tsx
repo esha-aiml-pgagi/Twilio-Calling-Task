@@ -20,22 +20,33 @@ import {
 
 const ITEMS_PER_PAGE = 50;
 
+import { EntriesPerPageDropdown } from "@/components/table/EntriesPerPageDropdown";
+
 export default function TablePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedFilters, setSelectedFilters] = useState<{
     titles: string[];
     companies: string[];
     countries: string[];
     companyCountries: string[];
     states: string[];
+    cities: string[];
+    companyStates: string[];
+    companyCities: string[];
+    technologies: string[];
   }>({
     titles: [],
     companies: [],
     countries: [],
     companyCountries: [],
     states: [],
+    cities: [],
+    companyStates: [],
+    companyCities: [],
+    technologies: [],
   });
   const [contacts, setContacts] = useState<Contact[]>(contactsData);
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,14 +57,19 @@ export default function TablePage() {
     return filterContacts(contacts, debouncedSearchQuery, selectedFilters);
   }, [contacts, debouncedSearchQuery, selectedFilters]);
 
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedFilters]);
+  }, [debouncedSearchQuery, selectedFilters, itemsPerPage]);
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   const handleSocialClick = (contact: Contact) => {
     setSelectedContact(contact);
@@ -96,9 +112,9 @@ export default function TablePage() {
           companyName: getField(["Company Name", "Company", "companyName", "company"]),
           email: getField(["Email", "Email Address", "email"]),
           corporatePhone: getField(["Corporate Phone", "Phone", "corporatePhone", "phone"]),
-          personLinkedIn: getField(["Person LinkedIn", "LinkedIn", "personLinkedIn", "linkedin"]),
+          personLinkedIn: getField(["Person Linkedin Url", "Person LinkedIn", "LinkedIn", "personLinkedIn", "linkedin"]),
           website: getField(["Website", "Company Website", "website"]),
-          companyLinkedin: getField(["Company LinkedIn", "companyLinkedin"]),
+          companyLinkedin: getField(["Company Linkedin Url", "Company LinkedIn", "companyLinkedin"]),
           socialMedia: [],
           city: getField(["City", "city"]),
           state: getField(["State", "state"]),
@@ -108,8 +124,8 @@ export default function TablePage() {
           companyState: getField(["Company State", "companyState"]),
           companyCountry: getField(["Company Country", "companyCountry"]),
           companyPhone: getField(["Company Phone", "companyPhone"]),
-          facebookUrl: getField(["Facebook URL", "Facebook", "facebookUrl"]),
-          twitterUrl: getField(["Twitter URL", "Twitter", "twitterUrl"]),
+          facebookUrl: getField(["Facebook Url", "Facebook URL", "Facebook", "facebookUrl"]),
+          twitterUrl: getField(["Twitter Url", "Twitter URL", "Twitter", "twitterUrl"]),
           technologies: getField(["Technologies", "technologies"]),
           annualRevenue: getField(["Annual Revenue", "annualRevenue"]),
           totalFunding: getField(["Total Funding", "totalFunding"]),
@@ -123,8 +139,8 @@ export default function TablePage() {
           replied: getField(["Replied", "replied"]),
           demoed: getField(["Demoed", "demoed"]),
           numberOfRetailLocations: getField(["Number of Retail Locations", "numberOfRetailLocations"]),
-          apolloContactId: getField(["Apollo Contact ID", "apolloContactId"]),
-          apolloAccountId: getField(["Apollo Account ID", "apolloAccountId"]),
+          apolloContactId: getField(["Apollo Contact Id", "Apollo Contact ID", "apolloContactId"]),
+          apolloAccountId: getField(["Apollo Account Id", "Apollo Account ID", "apolloAccountId"]),
           secondaryEmail: getField(["Secondary Email", "secondaryEmail"]),
           secondaryEmailSource: getField(["Secondary Email Source", "secondaryEmailSource"]),
           secondaryEmailStatus: getField(["Secondary Email Status", "secondaryEmailStatus"]),
@@ -235,7 +251,7 @@ export default function TablePage() {
   };
 
   return (
-    <div className="page-background p-6">
+    <div className="page-background p-6 min-h-screen">
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -247,32 +263,39 @@ export default function TablePage() {
 
       <DataTable data={paginatedData} onSocialClick={handleSocialClick} />
 
-      {totalPages > 1 && (
-        <div className="content-card p-4 mt-6 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
-          </p>
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              {renderPaginationItems()}
-              
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+      <div className="content-card p-4 mt-6 animate-slideUp-delay-2">
+        <div className="flex items-center justify-between w-full gap-4">
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            Showing 
+            <EntriesPerPageDropdown 
+              value={itemsPerPage} 
+              onChange={handleItemsPerPageChange} 
+            />
+            to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+          </div>
+          <div className="ml-auto">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {renderPaginationItems()}
+                
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
-      )}
+      </div>
 
       <SocialMediaModal
         isOpen={isSocialModalOpen}

@@ -8,16 +8,10 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Filter } from "lucide-react";
 import { Contact } from "@/lib/table-data";
 import { getUniqueValues } from "@/lib/table-utils";
+import { FilterDropdown } from "./FilterDropdown";
 
 interface FilterPopoverProps {
   contacts: Contact[];
@@ -27,6 +21,10 @@ interface FilterPopoverProps {
     countries: string[];
     companyCountries: string[];
     states: string[];
+    cities: string[];
+    companyStates: string[];
+    companyCities: string[];
+    technologies: string[];
   };
   onApplyFilters: (filters: {
     titles: string[];
@@ -34,6 +32,10 @@ interface FilterPopoverProps {
     countries: string[];
     companyCountries: string[];
     states: string[];
+    cities: string[];
+    companyStates: string[];
+    companyCities: string[];
+    technologies: string[];
   }) => void;
 }
 
@@ -45,7 +47,6 @@ export function FilterPopover({
   const [localFilters, setLocalFilters] = useState(selectedFilters);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Sync local filters with selected filters when popover opens
   useEffect(() => {
     if (isOpen) {
       setLocalFilters(selectedFilters);
@@ -57,6 +58,10 @@ export function FilterPopover({
   const countries = getUniqueValues(contacts, "country");
   const companyCountries = getUniqueValues(contacts, "companyCountry");
   const states = getUniqueValues(contacts, "state");
+  const cities = getUniqueValues(contacts, "city");
+  const companyStates = getUniqueValues(contacts, "companyState");
+  const companyCities = getUniqueValues(contacts, "companyCity");
+  const technologies = getUniqueValues(contacts, "technologies");
 
   const handleClearFilters = () => {
     const emptyFilters = {
@@ -65,6 +70,10 @@ export function FilterPopover({
       countries: [],
       companyCountries: [],
       states: [],
+      cities: [],
+      companyStates: [],
+      companyCities: [],
+      technologies: [],
     };
     setLocalFilters(emptyFilters);
     onApplyFilters(emptyFilters);
@@ -96,141 +105,124 @@ export function FilterPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 max-h-[500px] p-4" 
+        className="w-80 p-0" 
         align="end"
-        style={{ 
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
       >
-        <div className="space-y-4" style={{ 
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          paddingRight: '8px',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-        }}>
-          <style jsx>{`
-            div::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
+        <div className="flex flex-col max-h-[80vh]">
+          <div 
+            className="space-y-4 p-4 overflow-y-auto flex-1"
+            style={{ 
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
           
           <div className="space-y-2">
-            <Label htmlFor="title-filter" className="font-medium text-sm">
-              Job Title
-            </Label>
-            <Select
+            <Label className="font-medium text-sm">Title</Label>
+            <FilterDropdown
+              label="Titles"
               value={localFilters.titles[0] || "all"}
-              onValueChange={(value) => handleFilterChange("titles", value)}
-            >
-              <SelectTrigger id="title-filter" className="w-full">
-                <SelectValue placeholder="Select titles..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Titles</SelectItem>
-                {titles.map((title) => (
-                  <SelectItem key={title} value={title}>
-                    {title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={titles}
+              onChange={(value) => handleFilterChange("titles", value)}
+              placeholder="Select title..."
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company-filter" className="font-medium text-sm">
-              Company
-            </Label>
-            <Select
+            <Label className="font-medium text-sm">Company Name</Label>
+            <FilterDropdown
+              label="Companies"
               value={localFilters.companies[0] || "all"}
-              onValueChange={(value) => handleFilterChange("companies", value)}
-            >
-              <SelectTrigger id="company-filter" className="w-full">
-                <SelectValue placeholder="Select companies..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Companies</SelectItem>
-                {companies.map((company) => (
-                  <SelectItem key={company} value={company}>
-                    {company}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={companies}
+              onChange={(value) => handleFilterChange("companies", value)}
+              placeholder="Select company..."
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="country-filter" className="font-medium text-sm">
-              Country
-            </Label>
-            <Select
-              value={localFilters.countries[0] || "all"}
-              onValueChange={(value) => handleFilterChange("countries", value)}
-            >
-              <SelectTrigger id="country-filter" className="w-full">
-                <SelectValue placeholder="Select countries..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Countries</SelectItem>
-                {countries.map((country) => (
-                  <SelectItem key={country} value={country}>
-                    {country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="font-medium text-sm">City</Label>
+            <FilterDropdown
+              label="Cities"
+              value={localFilters.cities[0] || "all"}
+              options={cities}
+              onChange={(value) => handleFilterChange("cities", value)}
+              placeholder="Select city..."
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company-country-filter" className="font-medium text-sm">
-              Company Country
-            </Label>
-            <Select
-              value={localFilters.companyCountries[0] || "all"}
-              onValueChange={(value) =>
-                handleFilterChange("companyCountries", value)
-              }
-            >
-              <SelectTrigger id="company-country-filter" className="w-full">
-                <SelectValue placeholder="Select company countries..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Company Countries</SelectItem>
-                {companyCountries.map((country) => (
-                  <SelectItem key={country} value={country}>
-                    {country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="state-filter" className="font-medium text-sm">
-              State
-            </Label>
-            <Select
+            <Label className="font-medium text-sm">State</Label>
+            <FilterDropdown
+              label="States"
               value={localFilters.states[0] || "all"}
-              onValueChange={(value) => handleFilterChange("states", value)}
-            >
-              <SelectTrigger id="state-filter" className="w-full">
-                <SelectValue placeholder="Select states..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
-                {states.map((state) => (
-                  <SelectItem key={state} value={state}>
-                    {state}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={states}
+              onChange={(value) => handleFilterChange("states", value)}
+              placeholder="Select state..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-medium text-sm">Country</Label>
+            <FilterDropdown
+              label="Countries"
+              value={localFilters.countries[0] || "all"}
+              options={countries}
+              onChange={(value) => handleFilterChange("countries", value)}
+              placeholder="Select country..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-medium text-sm">Company City</Label>
+            <FilterDropdown
+              label="Company Cities"
+              value={localFilters.companyCities[0] || "all"}
+              options={companyCities}
+              onChange={(value) => handleFilterChange("companyCities", value)}
+              placeholder="Select company city..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-medium text-sm">Company State</Label>
+            <FilterDropdown
+              label="Company States"
+              value={localFilters.companyStates[0] || "all"}
+              options={companyStates}
+              onChange={(value) => handleFilterChange("companyStates", value)}
+              placeholder="Select company state..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-medium text-sm">Company Country</Label>
+            <FilterDropdown
+              label="Company Countries"
+              value={localFilters.companyCountries[0] || "all"}
+              options={companyCountries}
+              onChange={(value) => handleFilterChange("companyCountries", value)}
+              placeholder="Select company country..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="font-medium text-sm">Technologies</Label>
+            <FilterDropdown
+              label="Technologies"
+              value={localFilters.technologies[0] || "all"}
+              options={technologies}
+              onChange={(value) => handleFilterChange("technologies", value)}
+              placeholder="Select technology..."
+            />
           </div>
         </div>
 
-        <div className="flex gap-2 mt-4 pt-4 border-t">
+        <div className="flex gap-2 p-4 border-t bg-white rounded-b-md">
           <Button
             variant="outline"
             onClick={handleClearFilters}
@@ -245,6 +237,7 @@ export function FilterPopover({
             Apply
           </Button>
         </div>
+      </div>
       </PopoverContent>
     </Popover>
   );

@@ -7,6 +7,7 @@
   padding: 1.5rem;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   position: relative;
+  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .container::before {
@@ -34,7 +35,7 @@
   width: 100%;
   max-width: 28rem;
   position: relative;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   z-index: 1;
   will-change: transform, opacity;
@@ -55,6 +56,17 @@
   from {
     opacity: 0;
     transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;

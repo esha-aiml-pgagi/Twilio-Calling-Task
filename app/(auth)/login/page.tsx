@@ -12,9 +12,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEmailError("");
+
+    // Validate email domain
+    if (!email.endsWith("@pgagi.in")) {
+      setEmailError("Only @pgagi.in email addresses are allowed");
+      return;
+    }
+
     setIsLoading(true);
     
     // Simulate login
@@ -22,6 +31,11 @@ export default function LoginPage() {
     
     localStorage.setItem("isAuthenticated", "true");
     router.push("/dashboard");
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setEmailError("");
   };
 
   return (
@@ -41,11 +55,16 @@ export default function LoginPage() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               placeholder="Enter your email"
               required
               className={styles.input}
             />
+            {emailError && (
+              <p className="text-red-500 text-sm mt-1 animate-in fade-in duration-300">
+                {emailError}
+              </p>
+            )}
           </div>
 
           <div className={styles.field}>
