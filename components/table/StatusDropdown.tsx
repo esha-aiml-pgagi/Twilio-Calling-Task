@@ -96,7 +96,7 @@ export function StatusDropdown({ value, onChange }: StatusDropdownProps) {
         <div 
           className={`absolute left-0 ${
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
-          } bg-white border rounded-md shadow-lg z-50 min-w-[140px] transition-all duration-200 ${
+          } bg-white/95 backdrop-blur-md border rounded-md shadow-lg z-50 min-w-[140px] transition-all duration-250 ease-in-out ${
             isClosing 
               ? `opacity-0 scale-95 ${openUpward ? 'translate-y-2' : '-translate-y-2'}` 
               : 'opacity-100 scale-100 translate-y-0'

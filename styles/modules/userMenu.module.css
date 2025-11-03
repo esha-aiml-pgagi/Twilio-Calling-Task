@@ -18,7 +18,10 @@
 }
 
 .userButton:hover {
-  background-color: hsl(var(--accent));
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .avatar {
@@ -94,14 +97,17 @@
   top: calc(100% + 0.5rem);
   right: 0;
   min-width: 12rem;
-  background: white;
-  border: 1px solid hsl(var(--border));
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.08);
   padding: 0.5rem;
   z-index: 100;
   animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   transform-origin: top right;
+  will-change: transform, opacity;
 }
 
 @keyframes slideDown {
@@ -133,7 +139,10 @@
 }
 
 .dropdownItem:hover {
-  background-color: hsl(var(--accent));
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transform: translateX(2px);
 }
 

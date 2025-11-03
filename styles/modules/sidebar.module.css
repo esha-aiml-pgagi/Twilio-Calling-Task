@@ -40,8 +40,15 @@
 .menuButton {
   transition: all 200ms ease-out;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .menuButton:hover {
-  transform: translateX(4px);
+  transform: translateX(0px);
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }

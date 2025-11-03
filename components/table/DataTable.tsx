@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link as LinkIcon } from "lucide-react";
 import {
   Table,
@@ -152,9 +152,8 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                 ];
 
                 return (
-                  <>
+                  <React.Fragment key={contact.id}>
                     <TableRow
-                      key={contact.id}
                       className="transition-colors duration-200 hover:bg-gray-50"
                     >
                       <TableCell className="font-medium">{contact.name}</TableCell>
@@ -253,7 +252,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })
             )}

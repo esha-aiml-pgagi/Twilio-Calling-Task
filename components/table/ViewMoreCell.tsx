@@ -70,8 +70,14 @@ export function ViewMoreCell({ contact }: ViewMoreCellProps) {
         {isExpanded ? "Hide" : "View More"}
       </button>
 
-      {isExpanded && (
-        <div className="mt-4 bg-white border rounded-lg shadow-lg p-6 animate-in fade-in slide-in-from-top-2 duration-300">
+      <div 
+        className={`overflow-hidden transition-all duration-350 ease-in-out ${
+          isExpanded ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'
+        }`}
+      >
+        <div className={`bg-white/95 backdrop-blur-md border rounded-lg shadow-lg p-6 transition-all duration-350 ease-in-out ${
+          isExpanded ? 'scale-100 translate-y-0' : 'scale-95 -translate-y-2'
+        }`}>
           <div className="grid grid-cols-3 gap-x-8 gap-y-4">
             {visibleFields.map((field, index) => (
               <div key={index} className="text-sm">
@@ -81,7 +87,7 @@ export function ViewMoreCell({ contact }: ViewMoreCellProps) {
             ))}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

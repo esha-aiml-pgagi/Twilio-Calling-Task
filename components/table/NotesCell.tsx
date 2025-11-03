@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ArrowRight } from "lucide-react";
 
 interface NotesCellProps {
@@ -11,7 +12,12 @@ interface NotesCellProps {
 export function NotesCell({ value, onChange }: NotesCellProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [tempValue, setTempValue] = useState(value);
+  const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setTempValue(value);
@@ -52,13 +58,13 @@ export function NotesCell({ value, onChange }: NotesCellProps) {
         )}
       </div>
 
-      {isExpanded && (
+      {mounted && isExpanded && createPortal(
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300"
           onClick={handleClickOutside}
         >
           <div
-            className="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 animate-in zoom-in-95 duration-300"
+            className="bg-white/95 backdrop-blur-md rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">
@@ -79,7 +85,8 @@ export function NotesCell({ value, onChange }: NotesCellProps) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

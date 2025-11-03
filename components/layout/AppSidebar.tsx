@@ -38,7 +38,6 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   onClick={() => router.push(item.href)}
                   isActive={pathname === item.href}
-                  tooltip={item.title}
                   className={styles.menuButton}
                 >
                   <item.icon className="h-5 w-5" />

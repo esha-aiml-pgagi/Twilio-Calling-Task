@@ -102,7 +102,7 @@ export function ExpandableAddressCell({
           ref={cardRef}
           className={`absolute left-0 ${
             openUpward ? 'bottom-full mb-2' : 'top-full mt-2'
-          } z-40 bg-white border rounded-lg shadow-lg p-4 min-w-[250px] transition-all duration-300 ${
+          } z-40 bg-white/95 backdrop-blur-md border rounded-lg shadow-lg p-4 min-w-[250px] transition-all duration-300 ease-in-out ${
             isClosing 
               ? `opacity-0 scale-95 ${openUpward ? 'translate-y-2' : '-translate-y-2'}` 
               : 'opacity-100 scale-100 translate-y-0'
