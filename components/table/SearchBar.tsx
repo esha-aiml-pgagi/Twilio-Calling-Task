@@ -75,31 +75,34 @@ export function SearchBar({
   };
 
   return (
-    <div className="content-card p-6 mb-6 animate-slideUp">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
+    <div className="content-card p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 animate-slideUp">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, title, company, email..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 transition-all duration-200 focus:ring-2"
+            className="pl-10 text-sm sm:text-base transition-all duration-200 focus:ring-2"
           />
         </div>
-        <FilterPopover
-          contacts={contacts}
-          selectedFilters={selectedFilters}
-          onApplyFilters={onApplyFilters}
-        />
-        <Button
-          variant="outline"
-          size="default"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 transition-all duration-200 hover:bg-accent"
-        >
-          <Upload className="h-4 w-4" />
-          <span>Upload Excel</span>
-        </Button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <FilterPopover
+            contacts={contacts}
+            selectedFilters={selectedFilters}
+            onApplyFilters={onApplyFilters}
+          />
+          <Button
+            variant="outline"
+            size="default"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 transition-all duration-200 hover:bg-accent whitespace-nowrap text-sm sm:text-base"
+          >
+            <Upload className="h-4 w-4" />
+            <span className="hidden xs:inline">Upload Excel</span>
+            <span className="xs:hidden">Upload</span>
+          </Button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"

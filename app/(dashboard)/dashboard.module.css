@@ -9,7 +9,20 @@
   display: flex;
   flex: 1;
   overflow: hidden;
-  height: calc(100vh - 4rem);
+  height: calc(100vh - 3.5rem);
+  position: relative;
+}
+
+@media (min-width: 640px) {
+  .contentWrapper {
+    height: calc(100vh - 3.75rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .contentWrapper {
+    height: calc(100vh - 4rem);
+  }
 }
 
 .mainContent {

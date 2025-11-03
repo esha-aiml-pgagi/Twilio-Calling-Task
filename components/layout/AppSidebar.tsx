@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { Home, Table } from "lucide-react";
+import { useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,16 +32,28 @@ export function AppSidebar() {
     },
   ];
 
-  const handleNavigation = (href: string, e: React.MouseEvent) => {
-    // If sidebar is collapsed, navigate directly without opening sidebar
-    if (state === "collapsed") {
-      e.stopPropagation();
-      router.push(href);
-      // Keep sidebar collapsed
+  // Auto-close sidebar on mobile when navigating
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024 && state === "expanded") {
+        setOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [pathname, state, setOpen]);
+
+  const handleNavigation = (href: string, e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    
+    // Navigate to the page
+    router.push(href);
+    
+    // Close sidebar on mobile/tablet after navigation
+    if (window.innerWidth < 1024) {
       setOpen(false);
-    } else {
-      // If expanded, just navigate normally
-      router.push(href);
     }
   };
 

@@ -251,7 +251,7 @@ export default function TablePage() {
   };
 
   return (
-    <div className="page-background p-6 min-h-screen">
+    <div className="page-background p-3 sm:p-4 md:p-6 min-h-screen">
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -263,19 +263,19 @@ export default function TablePage() {
 
       <DataTable data={paginatedData} onSocialClick={handleSocialClick} />
 
-      <div className="content-card p-4 mt-6 animate-slideUp-delay-2">
-        <div className="flex items-center justify-between w-full gap-4">
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
-            Showing 
+      <div className="content-card p-3 sm:p-4 mt-4 sm:mt-6 animate-slideUp-delay-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3 sm:gap-4">
+          <div className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-1 sm:gap-2">
+            <span>Showing</span>
             <EntriesPerPageDropdown 
               value={itemsPerPage} 
               onChange={handleItemsPerPageChange} 
             />
-            to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+            <span>to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries</span>
           </div>
-          <div className="ml-auto">
+          <div className="w-full sm:w-auto sm:ml-auto overflow-x-auto">
             <Pagination>
-              <PaginationContent>
+              <PaginationContent className="flex-wrap sm:flex-nowrap">
                 <PaginationItem>
                   <PaginationPrevious
                     onClick={() => handlePageChange(currentPage - 1)}

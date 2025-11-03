@@ -4,7 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Header } from "@/components/layout/Header";
 import styles from "./dashboard.module.css";
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect } from "react";
 
 export default function DashboardLayout({
   children,
@@ -12,46 +12,42 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
 
+  // Lock body scroll when sidebar is open on mobile
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      // Don't close if clicking inside sidebar or header
-      if (
-        open &&
-        sidebarRef.current &&
-        headerRef.current &&
-        !sidebarRef.current.contains(target) &&
-        !headerRef.current.contains(target)
-      ) {
-        setOpen(false);
-      }
-    };
+    if (open && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.body.style.overflow = 'unset';
     };
   }, [open]);
 
-  const handleSidebarClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (!open) {
-      setOpen(true);
-    }
+  const handleOverlayClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(false);
   };
 
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <div className={styles.layoutContainer}>
-        <div ref={headerRef}>
-          <Header />
-        </div>
+        <Header />
         <div className={styles.contentWrapper}>
-          <div ref={sidebarRef} onClick={handleSidebarClick}>
+          {/* Overlay for mobile/tablet when sidebar is open */}
+          {open && (
+            <div
+              className="fixed inset-0 bg-black/50 z-30 lg:hidden animate-in fade-in duration-200"
+              onClick={handleOverlayClick}
+              onTouchEnd={handleOverlayClick}
+              style={{ cursor: 'pointer' }}
+              aria-hidden="true"
+            />
+          )}
+          <div className="relative z-40 lg:relative">
             <AppSidebar />
           </div>
           <main className={styles.mainContent}>{children}</main>

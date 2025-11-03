@@ -98,19 +98,19 @@ export function FilterPopover({
         <Button
           variant="outline"
           size="default"
-          className="flex items-center gap-2 transition-all duration-200 hover:bg-accent"
+          className="flex items-center gap-2 transition-all duration-200 hover:bg-accent whitespace-nowrap text-sm sm:text-base"
         >
           <Filter className="h-4 w-4" />
           <span>Filter</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 p-0" 
+        className="w-[85vw] sm:w-80 p-0" 
         align="end"
       >
-        <div className="flex flex-col max-h-[80vh]">
+        <div className="flex flex-col max-h-[70vh] sm:max-h-[80vh]">
           <div 
-            className="space-y-4 p-4 overflow-y-auto flex-1"
+            className="space-y-3 sm:space-y-4 p-3 sm:p-4 overflow-y-auto flex-1"
             style={{ 
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -222,17 +222,17 @@ export function FilterPopover({
           </div>
         </div>
 
-        <div className="flex gap-2 p-4 border-t bg-white rounded-b-md">
+        <div className="flex gap-2 p-3 sm:p-4 border-t bg-white rounded-b-md">
           <Button
             variant="outline"
             onClick={handleClearFilters}
-            className="flex-1 transition-all duration-200"
+            className="flex-1 transition-all duration-200 text-sm sm:text-base"
           >
             Clear
           </Button>
           <Button
             onClick={handleApplyFilters}
-            className="flex-1 transition-all duration-200"
+            className="flex-1 transition-all duration-200 text-sm sm:text-base"
           >
             Apply
           </Button>

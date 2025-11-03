@@ -36,31 +36,31 @@ export function SocialMediaModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md transition-all duration-300 modal-background">
+      <DialogContent className="w-[90vw] sm:max-w-md transition-all duration-300 modal-background max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Social Media Links - {contact.name}</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">Social Media Links - {contact.name}</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-3 sm:py-4">
           {socialLinks.length === 0 ? (
-            <p className="text-center text-muted-foreground italic">
+            <p className="text-center text-muted-foreground italic text-sm sm:text-base">
               No social media links available
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {socialLinks.map((link, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-all duration-200"
+                  className="flex items-center justify-between p-2 sm:p-3 rounded-lg border hover:bg-accent transition-all duration-200"
                   style={{
                     animation: `slideIn 0.3s ease-out ${index * 50}ms both`,
                   }}
                 >
-                  <span className="font-medium text-sm">{link.platform}</span>
+                  <span className="font-medium text-xs sm:text-sm truncate mr-2">{link.platform}</span>
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-blue-600 hover:underline text-sm transition-all duration-200"
+                    className="flex items-center gap-1 sm:gap-2 text-blue-600 hover:underline text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0"
                   >
                     <span>Visit</span>
                     <ExternalLink className="h-3 w-3" />

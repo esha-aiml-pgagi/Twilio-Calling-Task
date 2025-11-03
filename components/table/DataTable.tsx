@@ -71,28 +71,28 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
   };
 
   return (
-    <div className="content-card p-6 animate-slideUp-delay-1" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
-      <div className="table-wrapper-no-scrollbar">
+    <div className="content-card p-3 sm:p-4 md:p-6 animate-slideUp-delay-1" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
+      <div className="table-wrapper-no-scrollbar overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-bold min-w-[150px]">Name</TableHead>
-              <TableHead className="font-bold min-w-[120px]">Title</TableHead>
-              <TableHead className="font-bold min-w-[180px]">Company Name</TableHead>
-              <TableHead className="font-bold min-w-[200px]">Email</TableHead>
-              <TableHead className="font-bold min-w-[140px]">Corporate Phone</TableHead>
-              <TableHead className="font-bold min-w-[150px]">Address</TableHead>
-              <TableHead className="font-bold min-w-[180px]">Company Address</TableHead>
-              <TableHead className="font-bold min-w-[100px]">Social Media</TableHead>
-              <TableHead className="font-bold min-w-[160px]">Status</TableHead>
-              <TableHead className="font-bold min-w-[200px]">Notes</TableHead>
-              <TableHead className="font-bold min-w-[120px]">View More</TableHead>
+              <TableHead className="font-bold min-w-[120px] sm:min-w-[150px] text-xs sm:text-sm">Name</TableHead>
+              <TableHead className="font-bold min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm">Title</TableHead>
+              <TableHead className="font-bold min-w-[140px] sm:min-w-[180px] text-xs sm:text-sm">Company Name</TableHead>
+              <TableHead className="font-bold min-w-[160px] sm:min-w-[200px] text-xs sm:text-sm">Email</TableHead>
+              <TableHead className="font-bold min-w-[120px] sm:min-w-[140px] text-xs sm:text-sm">Corporate Phone</TableHead>
+              <TableHead className="font-bold min-w-[120px] sm:min-w-[150px] text-xs sm:text-sm">Address</TableHead>
+              <TableHead className="font-bold min-w-[140px] sm:min-w-[180px] text-xs sm:text-sm">Company Address</TableHead>
+              <TableHead className="font-bold min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm">Social Media</TableHead>
+              <TableHead className="font-bold min-w-[140px] sm:min-w-[160px] text-xs sm:text-sm">Status</TableHead>
+              <TableHead className="font-bold min-w-[160px] sm:min-w-[200px] text-xs sm:text-sm">Notes</TableHead>
+              <TableHead className="font-bold min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm">View More</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {contacts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={11} className="text-center py-6 sm:py-8 text-muted-foreground text-sm sm:text-base">
                   No results found
                 </TableCell>
               </TableRow>
@@ -156,13 +156,13 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                     <TableRow
                       className="transition-colors duration-200 hover:bg-gray-50"
                     >
-                      <TableCell className="font-medium">{contact.name}</TableCell>
-                      <TableCell className="text-sm">{contact.title}</TableCell>
-                      <TableCell className="text-sm">{contact.companyName}</TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">{contact.name}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{contact.title}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{contact.companyName}</TableCell>
                       <TableCell>
                         <a
                           href={`mailto:${contact.email}`}
-                          className="text-blue-600 hover:underline text-sm transition-all duration-200"
+                          className="text-blue-600 hover:underline text-xs sm:text-sm transition-all duration-200 break-all"
                         >
                           {contact.email}
                         </a>
@@ -170,7 +170,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                       <TableCell>
                         <a
                           href={`tel:${contact.corporatePhone}`}
-                          className="text-blue-600 hover:underline text-sm transition-all duration-200"
+                          className="text-blue-600 hover:underline text-xs sm:text-sm transition-all duration-200"
                         >
                           {contact.corporatePhone}
                         </a>
@@ -199,9 +199,9 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => onSocialClick(contact)}
-                          className="transition-all duration-200 hover:bg-accent"
+                          className="transition-all duration-200 hover:bg-accent h-8 w-8 sm:h-10 sm:w-10"
                         >
-                          <LinkIcon className="h-4 w-4" />
+                          <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </TableCell>
                       <TableCell>
@@ -219,7 +219,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                       <TableCell>
                         <button
                           onClick={() => toggleViewMore(contact.id)}
-                          className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                          className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
                         >
                           {isExpanded ? "Hide" : "View More"}
                         </button>
@@ -236,10 +236,10 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                               ? 'animate-out fade-out slide-out-to-top-2 duration-300' 
                               : 'animate-in fade-in slide-in-from-top-2 duration-300'
                           }`}>
-                            <div className="p-6 bg-white rounded-lg mx-4 my-4 shadow-sm border">
-                              <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+                            <div className="p-3 sm:p-4 md:p-6 bg-white rounded-lg mx-2 sm:mx-3 md:mx-4 my-2 sm:my-3 md:my-4 shadow-sm border">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-6 md:gap-x-8 gap-y-2 sm:gap-y-3 md:gap-y-4">
                                 {additionalFields.map((field, index) => (
-                                  <div key={index} className="text-sm">
+                                  <div key={index} className="text-xs sm:text-sm break-words">
                                     <span className="font-medium">{field.label}:</span>{" "}
                                     <span className="text-muted-foreground">
                                       {field.value || "—"}
