@@ -1,0 +1,47 @@
+.sidebarWrapper {
+  height: 100%;
+  position: relative;
+  flex-shrink: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sidebarWrapper > div {
+  position: relative !important;
+  height: 100% !important;
+}
+
+.sidebarWrapper [class*="fixed"] {
+  position: relative !important;
+  inset: unset !important;
+  height: 100% !important;
+}
+
+/* Ensure the inner sidebar container is flex column */
+.sidebarWrapper [data-sidebar="sidebar"] {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+.sidebar {
+  transition: all 300ms ease-in-out;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: 1rem 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.menuButton {
+  transition: all 200ms ease-out;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.menuButton:hover {
+  transform: translateX(4px);
+}
