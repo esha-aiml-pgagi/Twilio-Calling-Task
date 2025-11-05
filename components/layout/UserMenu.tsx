@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, LogOut, KeyRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCall } from "@/contexts/CallContext";
 
 export function UserMenu() {
   const router = useRouter();
+  const { hangUpCall } = useCall();
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -45,6 +47,7 @@ export function UserMenu() {
 
   const handleLogout = () => {
     handleClose();
+    hangUpCall(); // Auto hang up any active call
     localStorage.removeItem("isAuthenticated");
     router.push("/login");
   };

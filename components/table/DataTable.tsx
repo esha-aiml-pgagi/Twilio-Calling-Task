@@ -15,6 +15,7 @@ import { Contact } from "@/lib/table-data";
 import { ExpandableAddressCell } from "./ExpandableAddressCell";
 import { NotesCell } from "./NotesCell";
 import { StatusDropdown } from "./StatusDropdown";
+import { PhoneNumberCell } from "@/components/calling/PhoneNumberCell";
 
 interface DataTableProps {
   data: Contact[];
@@ -71,7 +72,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
   };
 
   return (
-    <div className="content-card p-3 sm:p-4 md:p-6 animate-slideUp-delay-1" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
+    <div className="content-card p-3 sm:p-4 md:p-6 animate-slideUp-delay-1" style={{ overflow: 'visible', position: 'relative' }}>
       <div className="table-wrapper-no-scrollbar overflow-x-auto">
         <Table>
           <TableHeader>
@@ -168,12 +169,11 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                         </a>
                       </TableCell>
                       <TableCell>
-                        <a
-                          href={`tel:${contact.corporatePhone}`}
-                          className="text-blue-600 hover:underline text-xs sm:text-sm transition-all duration-200"
-                        >
-                          {contact.corporatePhone}
-                        </a>
+                        <PhoneNumberCell 
+                          phoneNumber={contact.corporatePhone} 
+                          contactId={contact.id}
+                          contactNotes={contact.notes}
+                        />
                       </TableCell>
                       <TableCell>
                         <ExpandableAddressCell
@@ -214,6 +214,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                         <NotesCell
                           value={contact.notes || ""}
                           onChange={(notes) => handleNotesChange(contact.id, notes)}
+                          contactId={contact.id}
                         />
                       </TableCell>
                       <TableCell>

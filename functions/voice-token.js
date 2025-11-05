@@ -28,12 +28,10 @@ exports.handler = function (context, event, callback) {
 
   const response = new Twilio.Response();
 
-  /*
-   * Uncomment these lines for CORS support
-   * response.appendHeader('Access-Control-Allow-Origin', '*');
-   * response.appendHeader('Access-Control-Allow-Methods', 'GET');
-   * response.appendHeader('Access-Control-Allow-Headers', 'Content-Type');
-   */
+  // CORS support for localhost development
+  response.appendHeader('Access-Control-Allow-Origin', '*');
+  response.appendHeader('Access-Control-Allow-Methods', 'GET');
+  response.appendHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   response.appendHeader('Content-Type', 'application/json');
   response.setBody({

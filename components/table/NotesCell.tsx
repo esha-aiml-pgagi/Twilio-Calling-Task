@@ -3,17 +3,20 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight } from "lucide-react";
+import { useCall } from "@/contexts/CallContext";
 
 interface NotesCellProps {
   value: string;
   onChange: (value: string) => void;
+  contactId: string;
 }
 
-export function NotesCell({ value, onChange }: NotesCellProps) {
+export function NotesCell({ value, onChange, contactId }: NotesCellProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [tempValue, setTempValue] = useState(value);
   const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { currentContactId, isMiniPlayerVisible, triggerNotesBounce, currentContactNotes } = useCall();
 
   useEffect(() => {
     setMounted(true);
@@ -23,7 +26,25 @@ export function NotesCell({ value, onChange }: NotesCellProps) {
     setTempValue(value);
   }, [value]);
 
+  // Sync with mini-box notes if this is the current contact
+  useEffect(() => {
+    if (currentContactId === contactId && isMiniPlayerVisible) {
+      setTempValue(currentContactNotes);
+      if (value !== currentContactNotes) {
+        onChange(currentContactNotes);
+      }
+    }
+  }, [currentContactNotes, currentContactId, contactId, isMiniPlayerVisible, value, onChange]);
+
   const handleExpand = () => {
+    // Check if mini-player is open for this same contact
+    if (isMiniPlayerVisible && currentContactId === contactId) {
+      // Bounce the notes mini-box instead of opening popup
+      triggerNotesBounce();
+      return;
+    }
+
+    // Otherwise, open the popup normally
     setIsExpanded(true);
     setTempValue(value);
   };

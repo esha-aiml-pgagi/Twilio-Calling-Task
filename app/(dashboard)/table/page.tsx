@@ -4,9 +4,11 @@ import { useState, useMemo, useEffect } from "react";
 import { SearchBar } from "@/components/table/SearchBar";
 import { DataTable } from "@/components/table/DataTable";
 import { SocialMediaModal } from "@/components/table/SocialMediaModal";
+import { AddDetailsModal } from "@/components/table/AddDetailsModal";
 import { contactsData, Contact } from "@/lib/table-data";
 import { filterContacts } from "@/lib/table-utils";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useCall } from "@/contexts/CallContext";
 import * as XLSX from 'xlsx';
 import {
   Pagination,
@@ -26,7 +28,20 @@ export default function TablePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
+  const [isAddDetailsModalOpen, setIsAddDetailsModalOpen] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Apply blur effect when modal is open
+  useEffect(() => {
+    if (isAddDetailsModalOpen) {
+      document.body.setAttribute('data-modal-open', 'true');
+    } else {
+      document.body.removeAttribute('data-modal-open');
+    }
+    return () => {
+      document.body.removeAttribute('data-modal-open');
+    };
+  }, [isAddDetailsModalOpen]);
   const [selectedFilters, setSelectedFilters] = useState<{
     titles: string[];
     companies: string[];
@@ -50,6 +65,7 @@ export default function TablePage() {
   });
   const [contacts, setContacts] = useState<Contact[]>(contactsData);
   const [currentPage, setCurrentPage] = useState(1);
+  const { registerNotesUpdateCallback, unregisterNotesUpdateCallback } = useCall();
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -65,6 +81,25 @@ export default function TablePage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearchQuery, selectedFilters, itemsPerPage]);
+
+  // Register callback for notes updates from mini-box
+  useEffect(() => {
+    const handleNotesUpdate = (contactId: string, notes: string) => {
+      setContacts((prev) =>
+        prev.map((contact) =>
+          contact.id === contactId ? { ...contact, notes } : contact
+        )
+      );
+      // Also update the source data
+      const contact = contactsData.find(c => c.id === contactId);
+      if (contact) {
+        contact.notes = notes;
+      }
+    };
+
+    registerNotesUpdateCallback(handleNotesUpdate);
+    return () => unregisterNotesUpdateCallback();
+  }, [registerNotesUpdateCallback, unregisterNotesUpdateCallback]);
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
@@ -164,6 +199,28 @@ export default function TablePage() {
     }
   };
 
+  const handleAddContact = (newContact: Contact) => {
+    setContacts((prevContacts) => [...prevContacts, newContact]);
+    
+    // Show success message
+    const successMessage = document.createElement('div');
+    successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-[200] animate-slideDown';
+    successMessage.textContent = 'Contact added successfully!';
+    document.body.appendChild(successMessage);
+    
+    setTimeout(() => {
+      successMessage.classList.add('animate-fadeOut');
+      setTimeout(() => {
+        document.body.removeChild(successMessage);
+      }, 300);
+    }, 3000);
+
+    // Navigate to last page to show new contact
+    const totalContacts = contacts.length + 1;
+    const lastPage = Math.ceil(totalContacts / itemsPerPage);
+    setCurrentPage(lastPage);
+  };
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -256,6 +313,7 @@ export default function TablePage() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onFileUpload={handleFileUpload}
+        onAddDetails={() => setIsAddDetailsModalOpen(true)}
         contacts={contacts}
         selectedFilters={selectedFilters}
         onApplyFilters={handleApplyFilters}
@@ -301,6 +359,12 @@ export default function TablePage() {
         isOpen={isSocialModalOpen}
         onClose={() => setIsSocialModalOpen(false)}
         contact={selectedContact}
+      />
+
+      <AddDetailsModal
+        isOpen={isAddDetailsModalOpen}
+        onClose={() => setIsAddDetailsModalOpen(false)}
+        onAddContact={handleAddContact}
       />
     </div>
   );
