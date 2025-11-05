@@ -227,43 +227,84 @@ async def recording_callback(request: Request):
     recording_url = form.get("RecordingUrl")
     recording_duration = form.get("RecordingDuration")
     status = form.get("RecordingStatus")
-    to_number = request.query_params.get("DestNumber") or form.get("To") or form.get("Called")
+
+    # The number Twilio called
+    to_number = (
+        request.query_params.get("DestNumber")
+        or form.get("To")
+        or form.get("Called")
+    )
 
     print(f"📞 Callback received for {to_number} | CallSid: {call_sid} | RecordingURL: {recording_url}")
 
     if not to_number:
-        return {"message": "No number found, callback ignored"}
+        return {"message": "❌ No number found, callback ignored"}
 
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT id, call_sids, recording_sids, recording_urls, recording_durations, statuses FROM call_recordings WHERE number = %s", (to_number,))
+
+    # --- Try to find existing record for this number ---
+    cur.execute("""
+        SELECT id, call_sids, recording_sids, recording_urls, recording_durations, statuses 
+        FROM call_recordings WHERE number = %s
+    """, (to_number,))
     row = cur.fetchone()
+
     if row:
+        # ✅ Update existing record
         record_id, call_sids, recording_sids, recording_urls, recording_durations, statuses = row
+
+        # Initialize empty lists if any field is NULL
+        call_sids = call_sids or []
+        recording_sids = recording_sids or []
+        recording_urls = recording_urls or []
+        recording_durations = recording_durations or []
+        statuses = statuses or []
+
+        # Clean up placeholder
         if 'Not Called' in statuses:
             statuses.remove('Not Called')
+
+        # Append latest details
         call_sids.append(call_sid)
         recording_sids.append(recording_sid)
         recording_urls.append(recording_url)
         recording_durations.append(recording_duration)
         statuses.append(status)
+
+        # Update DB
         cur.execute("""
             UPDATE call_recordings
-            SET call_sids=%s, recording_sids=%s, recording_urls=%s, recording_durations=%s, statuses=%s
+            SET call_sids=%s, recording_sids=%s, recording_urls=%s,
+                recording_durations=%s, statuses=%s
             WHERE id=%s
         """, (call_sids, recording_sids, recording_urls, recording_durations, statuses, record_id))
+
     else:
+        # ⚡️ Create new record automatically
         cur.execute("""
             INSERT INTO call_recordings (
                 receiver_first_name, receiver_last_name, number, company, description, personal_notes,
                 call_sids, recording_sids, recording_urls, recording_durations, statuses
-            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """, (
-            "Unknown", "", to_number, "", "Auto-created via Twilio callback", "",
-            [call_sid], [recording_sid], [recording_url], [recording_duration], [status]
+            "Unknown",              # receiver_first_name placeholder
+            "",                     # receiver_last_name
+            to_number,              # number
+            "",                     # company
+            "Auto-created via frontend call",  # description
+            "",                     # personal_notes
+            [call_sid],
+            [recording_sid],
+            [recording_url],
+            [recording_duration],
+            [status],
         ))
 
     conn.commit()
     cur.close()
     conn.close()
+
+    print("✅ Callback processed successfully and saved to DB.")
     return {"message": "Callback processed successfully"}
