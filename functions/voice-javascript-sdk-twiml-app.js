@@ -21,7 +21,7 @@ exports.handler = function (context, event, callback) {
 
     const dial = twiml.dial({
       answerOnBridge: true,
-      callerId: process.env.CALLER_ID,
+      callerId: "+14159171205",
       record: 'record-from-answer-dual',
       recordingTrack: 'both',
       recordingStatusCallback: callbackUrl,
