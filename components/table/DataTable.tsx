@@ -155,7 +155,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                 return (
                   <React.Fragment key={contact.id}>
                     <TableRow
-                      className="transition-colors duration-200 hover:bg-gray-50"
+                      className="transition-all duration-300 hover:bg-gray-50/80"
                     >
                       <TableCell className="font-medium text-xs sm:text-sm">{contact.name}</TableCell>
                       <TableCell className="text-xs sm:text-sm">{contact.title}</TableCell>
@@ -163,7 +163,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                       <TableCell>
                         <a
                           href={`mailto:${contact.email}`}
-                          className="text-blue-600 hover:underline text-xs sm:text-sm transition-all duration-200 break-all"
+                          className="text-blue-600 hover:bg-blue-50 hover:underline rounded-md px-2 py-1 inline-block text-xs sm:text-sm transition-all duration-300 break-all"
                         >
                           {contact.email}
                         </a>
@@ -199,7 +199,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => onSocialClick(contact)}
-                          className="transition-all duration-200 hover:bg-accent h-8 w-8 sm:h-10 sm:w-10"
+                          className="transition-all duration-300 hover:bg-accent/80 rounded-lg h-8 w-8 sm:h-10 sm:w-10"
                         >
                           <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
@@ -220,7 +220,7 @@ export function DataTable({ data, onSocialClick }: DataTableProps) {
                       <TableCell>
                         <button
                           onClick={() => toggleViewMore(contact.id)}
-                          className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                          className="text-xs sm:text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-800 rounded-md px-2 py-1 transition-all duration-300"
                         >
                           {isExpanded ? "Hide" : "View More"}
                         </button>

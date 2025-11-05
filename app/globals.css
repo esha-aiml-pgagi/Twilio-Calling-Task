@@ -177,6 +177,8 @@
   flex: 1 1 auto !important;
   overflow-y: auto !important;
   min-height: 0 !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
 }
 
 /* Ensure sidebar footer stays at bottom */
@@ -692,3 +694,28 @@
     -webkit-backdrop-filter: none !important;
   }
 }
+
+/* ============================================ */
+/* CUSTOM CURSOR STYLES FOR DRAGGABLE ELEMENTS */
+/* ============================================ */
+
+/* Enhanced visibility for draggable elements */
+[style*="cursor: pointer"] {
+  cursor: pointer !important;
+}
+
+[style*="cursor: move"] {
+  cursor: move !important;
+}
+
+/* Add a subtle visual hint when hovering over draggable elements */
+[style*="cursor: pointer"]:hover {
+  cursor: pointer !important;
+}
+
+/* Add a subtle shadow to the element when dragging for better visibility */
+[style*="cursor: move"]:active {
+  cursor: move !important;
+}
+
+

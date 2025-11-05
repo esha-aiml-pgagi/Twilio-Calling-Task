@@ -2,18 +2,17 @@
 
 import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { UserMenu } from "@/components/layout/UserMenu";
 import styles from "@/styles/modules/header.module.css";
+import Image from "next/image";
 
 export function Header() {
   const { toggleSidebar } = useSidebar();
-  const pathname = usePathname();
+  const router = useRouter();
 
-  const getPageTitle = () => {
-    if (pathname === "/dashboard") return "Dashboard";
-    if (pathname === "/table") return "Table";
-    return "Dashboard";
+  const handleTitleClick = () => {
+    router.push("/dashboard");
   };
 
   return (
@@ -26,7 +25,19 @@ export function Header() {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className={styles.title}>{getPageTitle()}</h1>
+        <div 
+          onClick={handleTitleClick}
+          className="flex items-center gap-3 cursor-pointer transition-opacity duration-300 hover:opacity-80"
+        >
+          <Image 
+            src="/logo.png" 
+            alt="PG-AGI Logo" 
+            width={40} 
+            height={40}
+            className="object-contain rounded-lg"
+          />
+          <h1 className={styles.title}>PG-AGI Twilio Call-Center</h1>
+        </div>
         <UserMenu />
       </div>
     </header>

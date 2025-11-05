@@ -15,6 +15,8 @@ export function NotesCell({ value, onChange, contactId }: NotesCellProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [tempValue, setTempValue] = useState(value);
   const [mounted, setMounted] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { currentContactId, isMiniPlayerVisible, triggerNotesBounce, currentContactNotes } = useCall();
 
@@ -35,6 +37,22 @@ export function NotesCell({ value, onChange, contactId }: NotesCellProps) {
       }
     }
   }, [currentContactNotes, currentContactId, contactId, isMiniPlayerVisible, value, onChange]);
+
+  // Handle slide animation
+  useEffect(() => {
+    if (isExpanded) {
+      setShouldRender(true);
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isExpanded]);
 
   const handleExpand = () => {
     // Check if mini-player is open for this same contact
@@ -68,7 +86,7 @@ export function NotesCell({ value, onChange, contactId }: NotesCellProps) {
     <>
       <div
         onClick={handleExpand}
-        className="cursor-pointer text-sm hover:bg-accent/50 rounded px-2 py-1 transition-colors duration-200"
+        className="cursor-pointer text-sm hover:bg-accent/50 rounded-md px-2 py-1 transition-all duration-300"
       >
         {!value ? (
           <span className="text-muted-foreground italic">Input here</span>
@@ -79,14 +97,20 @@ export function NotesCell({ value, onChange, contactId }: NotesCellProps) {
         )}
       </div>
 
-      {mounted && isExpanded && createPortal(
+      {mounted && shouldRender && createPortal(
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300"
+          className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity duration-300 ${
+            isVisible ? 'opacity-100' : 'opacity-0'
+          }`}
           onClick={handleClickOutside}
         >
           <div
-            className="glass-liquid-container glass-liquid-surface bg-white/95 backdrop-blur-md rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 animate-liquid-glass-in"
+            className="glass-liquid-container glass-liquid-surface bg-white/95 backdrop-blur-md rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 animate-liquid-glass-in transition-all duration-300"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              transform: isVisible ? 'translateY(0)' : 'translateY(100vh)',
+              opacity: isVisible ? 1 : 0,
+            }}
           >
             <div className="glass-liquid-content flex items-start gap-3">
               <textarea

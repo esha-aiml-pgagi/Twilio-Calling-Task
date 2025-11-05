@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Maximize2, X } from 'lucide-react';
 import { useCall } from '@/contexts/CallContext';
 import { useDraggable } from '@/hooks/use-draggable';
@@ -33,6 +33,9 @@ export function MiniPlayerWithDevice() {
     onCornerChange: setCurrentCorner,
   });
 
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+
   // Sync dragging state to context
   useEffect(() => {
     setContextIsDragging(isDragging);
@@ -44,7 +47,23 @@ export function MiniPlayerWithDevice() {
     return () => setHangUpFunction(null);
   }, [twilioHangUp, setHangUpFunction]);
 
-  if (!isMiniPlayerVisible || !callSession) return null;
+  // Handle slide-in animation based on corner
+  useEffect(() => {
+    if (isMiniPlayerVisible && callSession) {
+      setShouldRender(true);
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isMiniPlayerVisible, callSession]);
+
+  if (!shouldRender || !callSession) return null;
 
   const { phoneNumber, state, startTime } = callSession;
 
@@ -69,6 +88,23 @@ export function MiniPlayerWithDevice() {
   // Determine if we should use bottom positioning (for bottom corners)
   const isBottomCorner = currentCorner === 'bottom-right' || currentCorner === 'bottom-left';
 
+  // Get slide direction based on corner
+  const getSlideTransform = () => {
+    if (!isVisible) {
+      switch (currentCorner) {
+        case 'bottom-right':
+          return 'translate(100%, 100%)';
+        case 'bottom-left':
+          return 'translate(-100%, 100%)';
+        case 'top-right':
+          return 'translate(100%, -100%)';
+        case 'top-left':
+          return 'translate(-100%, -100%)';
+      }
+    }
+    return 'translate(0, 0)';
+  };
+
   return (
     <div
       ref={elementRef}
@@ -80,11 +116,18 @@ export function MiniPlayerWithDevice() {
           ? { bottom: `20px`, top: 'auto' }  // Bottom-anchored with fixed bottom margin
           : { top: `${position.y}px`, bottom: 'auto' }  // Top-anchored (always during drag)
         ),
-        transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        cursor: isDragging ? 'grabbing' : 'grab',
+        transform: isDragging ? 'translate(0, 0)' : getSlideTransform(),
+        opacity: isVisible ? 1 : 0,
+        transition: isDragging ? 'none' : 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        cursor: isDragging ? 'move' : 'pointer',
       }}
     >
-      <div className="bg-white rounded-lg shadow-2xl p-4 w-80 border border-gray-200 flex flex-col" onMouseDown={handleMouseDown}>
+      <div 
+        className={`bg-white rounded-lg shadow-2xl p-4 w-80 border flex flex-col ${
+          isDragging ? 'border-blue-400 shadow-blue-200' : 'border-gray-200'
+        }`}
+        onMouseDown={handleMouseDown}
+      >
         {/* Header with Redirect and Close Buttons */}
         <div className="flex items-center justify-between mb-3">
           <button

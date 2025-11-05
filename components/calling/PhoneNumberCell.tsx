@@ -28,7 +28,7 @@ export function PhoneNumberCell({ phoneNumber, contactId, contactNotes = '' }: P
   return (
     <button
       onClick={handleClick}
-      className="text-blue-600 hover:underline text-xs sm:text-sm transition-all duration-200 cursor-pointer font-medium"
+      className="text-blue-600 hover:bg-blue-50 hover:underline rounded-md px-2 py-1 text-xs sm:text-sm transition-all duration-300 cursor-pointer font-medium"
     >
       {phoneNumber}
     </button>

@@ -13,6 +13,8 @@ export function NotesMiniBox({ miniPlayerPosition, onNotesChange }: NotesMiniBox
   const { isMiniPlayerVisible, currentContactId, currentContactNotes, updateContactNotes, currentCorner, shouldBounceNotes, resetNotesBounce, isDragging } = useCall();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isBouncing, setIsBouncing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
   // Follow mini player with spring animation
   useEffect(() => {
@@ -51,12 +53,41 @@ export function NotesMiniBox({ miniPlayerPosition, onNotesChange }: NotesMiniBox
     }
   }, [shouldBounceNotes, resetNotesBounce]);
 
-  if (!isMiniPlayerVisible || !currentContactId) return null;
+  // Handle slide-in animation from mini player
+  useEffect(() => {
+    if (isMiniPlayerVisible && currentContactId) {
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isMiniPlayerVisible, currentContactId]);
+
+  if (!shouldRender) return null;
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNotes = e.target.value;
     updateContactNotes(newNotes);
-    onNotesChange(currentContactId, newNotes);
+    if (currentContactId) {
+      onNotesChange(currentContactId, newNotes);
+    }
+  };
+
+  // Get slide direction based on corner (slides out from mini player)
+  const getSlideTransform = () => {
+    if (!isVisible) {
+      const offset = getNotesOffset(currentCorner);
+      const slideDistance = offset.x > 0 ? '100%' : '-100%';
+      return `translateX(${slideDistance})`;
+    }
+    return 'translateX(0)';
   };
 
   return (
@@ -65,7 +96,9 @@ export function NotesMiniBox({ miniPlayerPosition, onNotesChange }: NotesMiniBox
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        transition: isDragging ? 'none' : (isBouncing ? 'none' : 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'),
+        transform: isDragging ? 'translateX(0)' : (isBouncing ? 'translateX(0)' : getSlideTransform()),
+        opacity: isVisible ? 1 : 0,
+        transition: isDragging ? 'none' : (isBouncing ? 'none' : 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'),
       }}
     >
       <div className="bg-white rounded-lg shadow-2xl p-4 w-64 border border-gray-200 flex flex-col" style={{ height: '168px' }}>

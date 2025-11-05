@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -42,6 +43,14 @@ export default function LoginPage() {
     <div className={styles.container}>
       <div className={styles.formCard}>
         <div className={styles.header}>
+          <Image
+            src="/logo.png"
+            alt="PGAGI Logo"
+            width={64}
+            height={64}
+            className={styles.logo}
+            priority
+          />
           <h1 className={styles.title}>Welcome Back</h1>
           <p className={styles.subtitle}>Sign in to your account</p>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,14 @@ export default function ForgotPasswordPage() {
           </button>
 
           <div className={styles.header}>
+            <Image
+              src="/logo.png"
+              alt="PGAGI Logo"
+              width={64}
+              height={64}
+              className={styles.logo}
+              priority
+            />
             <h1 className={styles.title}>Forgot Password</h1>
             <p className={styles.subtitle}>
               Enter your email to receive a reset link

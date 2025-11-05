@@ -62,6 +62,8 @@ export function AddDetailsModal({ isOpen, onClose, onAddContact }: AddDetailsMod
 
   const [errors, setErrors] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -79,7 +81,23 @@ export function AddDetailsModal({ isOpen, onClose, onAddContact }: AddDetailsMod
     };
   }, [isOpen]);
 
-  if (!isOpen || !mounted) return null;
+  // Handle slide animation
+  useEffect(() => {
+    if (isOpen && mounted) {
+      setShouldRender(true);
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, mounted]);
+
+  if (!shouldRender || !mounted) return null;
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -202,10 +220,18 @@ export function AddDetailsModal({ isOpen, onClose, onAddContact }: AddDetailsMod
 
   const modalContent = (
     <div
-      className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn"
+      className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col animate-slideUp">
+      <div 
+        className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col transition-all duration-300"
+        style={{
+          transform: isVisible ? 'translateY(0)' : 'translateY(100vh)',
+          opacity: isVisible ? 1 : 0,
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">Add Contact Details</h2>

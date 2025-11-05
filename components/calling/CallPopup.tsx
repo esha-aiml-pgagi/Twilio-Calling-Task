@@ -8,25 +8,49 @@ import { CallCard } from './CallCard';
 export const CallPopup = memo(function CallPopup() {
   const { callSession, isPopupOpen, closeCallPopup } = useCall();
   const [mounted, setMounted] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Track mounted state for portal
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!isPopupOpen || !callSession || !mounted) return null;
+  useEffect(() => {
+    if (isPopupOpen && callSession && mounted) {
+      setShouldRender(true);
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isPopupOpen, callSession, mounted]);
+
+  if (!shouldRender || !mounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[100] pointer-events-none">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm pointer-events-auto animate-in fade-in duration-200"
+        className={`absolute inset-0 bg-black/30 backdrop-blur-sm pointer-events-auto transition-opacity duration-200 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={closeCallPopup}
       />
 
       {/* Popup Modal */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+        <div 
+          className="pointer-events-auto transition-all duration-200"
+          style={{
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? 'translateY(0)' : 'translateY(50vh)',
+          }}
+        >
           <CallCard variant="popup" />
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 
 interface ExpandableAddressCellProps {
@@ -29,8 +30,14 @@ export function ExpandableAddressCell({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [mounted, setMounted] = useState(false);
   const cellRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,6 +58,30 @@ export function ExpandableAddressCell({
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isExpanded]);
+
+  useEffect(() => {
+    const updatePosition = () => {
+      if (cellRef.current && isExpanded) {
+        const rect = cellRef.current.getBoundingClientRect();
+        setPosition({
+          top: rect.bottom,
+          left: rect.left,
+          width: rect.width,
+        });
+      }
+    };
+
+    if (isExpanded) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
     };
   }, [isExpanded]);
 
@@ -80,13 +111,67 @@ export function ExpandableAddressCell({
     }
   };
 
+  const dropdownContent = isExpanded && mounted ? (
+    <div 
+      ref={cardRef}
+      className={`glass-liquid-container fixed z-[60] glass-liquid-surface bg-white/95 backdrop-blur-md border rounded-lg shadow-lg p-4 min-w-[250px] transition-opacity duration-300 ease-in-out ${
+        isClosing 
+          ? 'opacity-0' 
+          : 'opacity-100'
+      }`}
+      style={{
+        top: openUpward ? 'auto' : `${position.top + 8}px`,
+        bottom: openUpward ? `${window.innerHeight - position.top + 8}px` : 'auto',
+        left: `${position.left}px`,
+      }}
+    >
+      <div className="glass-liquid-content">
+        {type === "personal" ? (
+          <div className="space-y-2">
+            <div className="text-sm">
+              <span className="font-medium">City:</span>{" "}
+              <span className="text-muted-foreground">{city || "N/A"}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">State:</span>{" "}
+              <span className="text-muted-foreground">{state || "N/A"}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">Country:</span>{" "}
+              <span className="text-muted-foreground">{country || "N/A"}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="text-sm">
+              <span className="font-medium">Address:</span>{" "}
+              <span className="text-muted-foreground">{fullAddress || "N/A"}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">City:</span>{" "}
+              <span className="text-muted-foreground">{companyCity || "N/A"}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">State:</span>{" "}
+              <span className="text-muted-foreground">{companyState || "N/A"}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">Country:</span>{" "}
+              <span className="text-muted-foreground">{companyCountry || "N/A"}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div className="relative" ref={cellRef} style={{ zIndex: isExpanded ? 40 : 'auto' }}>
+    <div className="relative" ref={cellRef}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm truncate">{displayText}</span>
         <button
           onClick={handleToggle}
-          className="flex-shrink-0 p-1 hover:bg-accent rounded transition-all duration-200"
+          className="flex-shrink-0 p-1 hover:bg-accent/60 rounded-md transition-all duration-300"
           aria-label={isExpanded ? "Collapse address" : "Expand address"}
         >
           <ChevronDown
@@ -97,56 +182,7 @@ export function ExpandableAddressCell({
         </button>
       </div>
 
-      {isExpanded && (
-        <div 
-          ref={cardRef}
-          className={`glass-liquid-container absolute left-0 ${
-            openUpward ? 'bottom-full mb-2' : 'top-full mt-2'
-          } z-40 glass-liquid-surface bg-white/95 backdrop-blur-md border rounded-lg shadow-lg p-4 min-w-[250px] transition-all duration-300 ease-in-out animate-liquid-glass-in ${
-            isClosing 
-              ? `opacity-0 scale-95 ${openUpward ? 'translate-y-2' : '-translate-y-2'}` 
-              : 'opacity-100 scale-100 translate-y-0'
-          }`}
-        >
-          <div className="glass-liquid-content">
-            {type === "personal" ? (
-              <div className="space-y-2">
-                <div className="text-sm">
-                  <span className="font-medium">City:</span>{" "}
-                  <span className="text-muted-foreground">{city || "N/A"}</span>
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">State:</span>{" "}
-                  <span className="text-muted-foreground">{state || "N/A"}</span>
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Country:</span>{" "}
-                  <span className="text-muted-foreground">{country || "N/A"}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="text-sm">
-                  <span className="font-medium">Address:</span>{" "}
-                  <span className="text-muted-foreground">{fullAddress || "N/A"}</span>
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">City:</span>{" "}
-                  <span className="text-muted-foreground">{companyCity || "N/A"}</span>
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">State:</span>{" "}
-                  <span className="text-muted-foreground">{companyState || "N/A"}</span>
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Country:</span>{" "}
-                  <span className="text-muted-foreground">{companyCountry || "N/A"}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {mounted && dropdownContent && createPortal(dropdownContent, document.body)}
     </div>
   );
 }
