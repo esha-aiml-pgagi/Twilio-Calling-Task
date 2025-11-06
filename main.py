@@ -1,27 +1,42 @@
+# main.py
 from fastapi import FastAPI, Request, HTTPException, Query
 from pydantic import BaseModel
-from typing import List, Optional
-import psycopg2
+from typing import Optional
 from datetime import datetime
+from bson import ObjectId
+from pymongo import MongoClient, errors
+import os
+from dotenv import load_dotenv
+import certifi
+import io
+import pandas as pd
+from fastapi import UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 
-# --- Database Config ---
-DB_HOST = "localhost"
-DB_PORT = 5432
-DB_NAME = "call_center_db"
-DB_USER = "call_user"
-DB_PASSWORD = "yourpassword"
+load_dotenv()
 
-def get_conn():
-    return psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD
-    )
+# --- Config / Env ---
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("DB_NAME", "call_center_db")
+
+if not MONGO_URI:
+    raise RuntimeError("MONGO_URI environment variable is not set. Add it to your .env or environment.")
+
+# Create client but avoid network calls at import time; pass certifi CA bundle to avoid macOS TLS issues
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where(), serverSelectionTimeoutMS=10000)
+db = client[DB_NAME]
+calls_collection = db["call_recordings"]
 
 # --- FastAPI App ---
-app = FastAPI(title="Call Center Backend", version="3.1")
+app = FastAPI(title="Call Center Backend (MongoDB)", version="3.1")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or specific domain list
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Schemas ---
 class CallCreate(BaseModel):
@@ -49,87 +64,87 @@ class CallUpdate(BaseModel):
     personal_notes: Optional[str] = None
     status: Optional[str] = None
 
-# --- Initialize Table ---
-def init_db():
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS call_recordings (
-        id SERIAL PRIMARY KEY,
-        receiver_first_name TEXT,
-        receiver_last_name TEXT,
-        number TEXT UNIQUE,
-        company TEXT,
-        description TEXT,
-        personal_notes TEXT,
-        call_sids TEXT[],
-        recording_sids TEXT[],
-        recording_urls TEXT[],
-        recording_durations TEXT[],
-        statuses TEXT[],
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
 
-init_db()
+# --- Startup / Shutdown handlers ---
+@app.on_event("startup")
+def startup_db():
+    """
+    Run once at app startup: check DB connectivity and create index if needed.
+    Doing it here prevents import-time network failures that crash the process.
+    """
+    try:
+        # ping to ensure connectivity and raise early if there's a TLS/whitelist issue
+        client.admin.command("ping")
+    except errors.ServerSelectionTimeoutError as e:
+        # Connection timed out (TLS, network, IP whitelist)
+        print("❌ Cannot connect to MongoDB Atlas at startup:", str(e))
+        # Re-raise to fail startup so infra can detect it (optionally, comment out to allow degraded start)
+        raise
+
+    try:
+        # Create unique index on number (idempotent)
+        calls_collection.create_index("number", unique=True, background=True)
+    except Exception as exc:
+        # If index creation fails, log but do not necessarily crash
+        print("⚠️ Warning: failed to create index at startup:", str(exc))
+
+
+@app.on_event("shutdown")
+def shutdown_db():
+    try:
+        client.close()
+        print("🔌 MongoDB client closed.")
+    except Exception:
+        pass
+
+
+# -------------------------
+# Endpoint implementations
+# -------------------------
 
 # --- Create ---
 @app.post("/calls")
 def create_call(call: CallCreate):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM call_recordings WHERE number = %s", (call.number,))
-    if cur.fetchone():
-        cur.close()
-        conn.close()
+    existing = calls_collection.find_one({"number": call.number})
+    if existing:
         raise HTTPException(status_code=409, detail="Call record already exists")
 
-    cur.execute("""
-        INSERT INTO call_recordings (
-            receiver_first_name, receiver_last_name, number, company, description, personal_notes,
-            call_sids, recording_sids, recording_urls, recording_durations, statuses
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        RETURNING id
-    """, (
-        call.receiver_first_name, call.receiver_last_name, call.number, call.company, call.description,
-        call.personal_notes or "", [], [], [], [], ['Not Called']
-    ))
-    new_id = cur.fetchone()[0]
-    conn.commit()
-    cur.close()
-    conn.close()
-    return {"message": "Call record created successfully", "id": new_id}
+    new_doc = {
+        "receiver_first_name": call.receiver_first_name,
+        "receiver_last_name": call.receiver_last_name,
+        "number": call.number,
+        "company": call.company,
+        "description": call.description,
+        "personal_notes": call.personal_notes or "",
+        "call_sids": [],
+        "recording_sids": [],
+        "recording_urls": [],
+        "recording_durations": [],
+        "statuses": ["Not Called"],
+        "created_at": datetime.utcnow(),
+    }
+
+    try:
+        result = calls_collection.insert_one(new_doc)
+    except errors.DuplicateKeyError:
+        # Race condition: another process inserted same number
+        raise HTTPException(status_code=409, detail="Call record already exists (duplicate)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB insert failed: {str(e)}")
+
+    return {"message": "Call record created successfully", "id": str(result.inserted_id)}
+
 
 # --- List All ---
 @app.get("/calls")
 def list_calls():
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM call_recordings ORDER BY created_at DESC")
-    rows = cur.fetchall()
-    colnames = [desc[0] for desc in cur.description]
-    result = [dict(zip(colnames, r)) for r in rows]
-    cur.close()
-    conn.close()
+    docs = list(calls_collection.find().sort("created_at", -1))
+    result = []
+    for d in docs:
+        d["id"] = str(d.pop("_id"))
+        result.append(d)
     return result
 
-# --- View Single Record ---
-@app.get("/calls/{call_id}")
-def get_call(call_id: int):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM call_recordings WHERE id = %s", (call_id,))
-    row = cur.fetchone()
-    if not row:
-        raise HTTPException(status_code=404, detail="Call record not found")
-    colnames = [desc[0] for desc in cur.description]
-    result = dict(zip(colnames, row))
-    cur.close()
-    conn.close()
-    return result
 
 # --- Search Functionality ---
 @app.get("/calls/search")
@@ -137,86 +152,96 @@ def search_calls(
     name: Optional[str] = Query(None, description="Search by receiver first/last name or company"),
     status: Optional[str] = Query(None, description="Filter by status")
 ):
-    conn = get_conn()
-    cur = conn.cursor()
-
-    query = "SELECT * FROM call_recordings WHERE 1=1"
-    params = []
+    query = {}
 
     if name:
-        query += " AND (receiver_first_name ILIKE %s OR receiver_last_name ILIKE %s OR company ILIKE %s)"
-        like = f"%{name}%"
-        params.extend([like, like, like])
-    if status:
-        query += " AND %s = ANY(statuses)"
-        params.append(status)
+        query["$or"] = [
+            {"receiver_first_name": {"$regex": name, "$options": "i"}},
+            {"receiver_last_name": {"$regex": name, "$options": "i"}},
+            {"company": {"$regex": name, "$options": "i"}},
+        ]
 
-    query += " ORDER BY created_at DESC"
-    cur.execute(query, tuple(params))
-    rows = cur.fetchall()
-    colnames = [desc[0] for desc in cur.description]
-    result = [dict(zip(colnames, r)) for r in rows]
-    cur.close()
-    conn.close()
-    return {"count": len(result), "results": result}
+    if status:
+        query["statuses"] = status
+
+    docs = list(calls_collection.find(query).sort("created_at", -1))
+    results = []
+    for d in docs:
+        d["id"] = str(d.pop("_id"))
+        results.append(d)
+    return {"count": len(results), "results": results}
+
+
+# --- View Single Record ---
+@app.get("/calls/{call_id}")
+def get_call(call_id: str):
+    try:
+        _id = ObjectId(call_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+
+    call = calls_collection.find_one({"_id": _id})
+    if not call:
+        raise HTTPException(status_code=404, detail="Call record not found")
+
+    call["id"] = str(call.pop("_id"))
+    return call
+
 
 # --- Update ---
 @app.put("/calls/{call_id}")
-def update_call(call_id: int, update: CallUpdate):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM call_recordings WHERE id = %s", (call_id,))
-    record = cur.fetchone()
-    if not record:
-        cur.close()
-        conn.close()
+def update_call(call_id: str, update: CallUpdate):
+    try:
+        _id = ObjectId(call_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+
+    call = calls_collection.find_one({"_id": _id})
+    if not call:
         raise HTTPException(status_code=404, detail="Call record not found")
 
-    update_data = update.dict(exclude_unset=True)
+    update_data = {k: v for k, v in update.dict().items() if v is not None}
     if not update_data:
-        cur.close()
-        conn.close()
         return {"message": "No fields to update"}
 
     status_value = update_data.pop("status", None)
 
-    set_clauses, values = [], []
-    for field, value in update_data.items():
-        set_clauses.append(f"{field} = %s")
-        values.append(value)
-
-    if set_clauses:
-        values.append(call_id)
-        sql = f"UPDATE call_recordings SET {', '.join(set_clauses)} WHERE id = %s"
-        cur.execute(sql, values)
+    if update_data:
+        try:
+            calls_collection.update_one({"_id": _id}, {"$set": update_data})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"DB update failed: {str(e)}")
 
     if status_value:
-        cur.execute("SELECT statuses FROM call_recordings WHERE id = %s", (call_id,))
-        current_statuses = cur.fetchone()[0] or []
-        current_statuses.append(status_value)
-        cur.execute("UPDATE call_recordings SET statuses = %s WHERE id = %s", (current_statuses, call_id))
+        try:
+            calls_collection.update_one({"_id": _id}, {"$push": {"statuses": status_value}})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"DB update failed: {str(e)}")
 
-    conn.commit()
-    cur.close()
-    conn.close()
-    return {"message": f"Call record {call_id} updated successfully", "updated_fields": list(update.dict(exclude_unset=True).keys())}
+    return {
+        "message": f"Call record {call_id} updated successfully",
+        "updated_fields": list(update.dict(exclude_unset=True).keys())
+    }
+
 
 # --- Delete ---
 @app.delete("/calls/{call_id}")
-def delete_call(call_id: int):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM call_recordings WHERE id = %s", (call_id,))
-    if not cur.fetchone():
-        cur.close()
-        conn.close()
+def delete_call(call_id: str):
+    try:
+        _id = ObjectId(call_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+
+    try:
+        result = calls_collection.delete_one({"_id": _id})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB delete failed: {str(e)}")
+
+    if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Call record not found")
 
-    cur.execute("DELETE FROM call_recordings WHERE id = %s", (call_id,))
-    conn.commit()
-    cur.close()
-    conn.close()
     return {"message": f"Call record {call_id} deleted successfully"}
+
 
 # --- Twilio Recording Callback ---
 @app.post("/recordings/callback")
@@ -228,7 +253,6 @@ async def recording_callback(request: Request):
     recording_duration = form.get("RecordingDuration")
     status = form.get("RecordingStatus")
 
-    # The number Twilio called
     to_number = (
         request.query_params.get("DestNumber")
         or form.get("To")
@@ -240,71 +264,116 @@ async def recording_callback(request: Request):
     if not to_number:
         return {"message": "❌ No number found, callback ignored"}
 
-    conn = get_conn()
-    cur = conn.cursor()
+    try:
+        existing = calls_collection.find_one({"number": to_number})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB lookup failed: {str(e)}")
 
-    # --- Try to find existing record for this number ---
-    cur.execute("""
-        SELECT id, call_sids, recording_sids, recording_urls, recording_durations, statuses 
-        FROM call_recordings WHERE number = %s
-    """, (to_number,))
-    row = cur.fetchone()
+    if existing:
+        try:
+            # Remove placeholder 'Not Called' if exists
+            if "Not Called" in existing.get("statuses", []):
+                calls_collection.update_one({"_id": existing["_id"]}, {"$pull": {"statuses": "Not Called"}})
 
-    if row:
-        # ✅ Update existing record
-        record_id, call_sids, recording_sids, recording_urls, recording_durations, statuses = row
-
-        # Initialize empty lists if any field is NULL
-        call_sids = call_sids or []
-        recording_sids = recording_sids or []
-        recording_urls = recording_urls or []
-        recording_durations = recording_durations or []
-        statuses = statuses or []
-
-        # Clean up placeholder
-        if 'Not Called' in statuses:
-            statuses.remove('Not Called')
-
-        # Append latest details
-        call_sids.append(call_sid)
-        recording_sids.append(recording_sid)
-        recording_urls.append(recording_url)
-        recording_durations.append(recording_duration)
-        statuses.append(status)
-
-        # Update DB
-        cur.execute("""
-            UPDATE call_recordings
-            SET call_sids=%s, recording_sids=%s, recording_urls=%s,
-                recording_durations=%s, statuses=%s
-            WHERE id=%s
-        """, (call_sids, recording_sids, recording_urls, recording_durations, statuses, record_id))
-
-    else:
-        # ⚡️ Create new record automatically
-        cur.execute("""
-            INSERT INTO call_recordings (
-                receiver_first_name, receiver_last_name, number, company, description, personal_notes,
-                call_sids, recording_sids, recording_urls, recording_durations, statuses
+            # Update existing record by pushing event fields
+            calls_collection.update_one(
+                {"_id": existing["_id"]},
+                {
+                    "$push": {
+                        "call_sids": call_sid,
+                        "recording_sids": recording_sid,
+                        "recording_urls": recording_url,
+                        "recording_durations": recording_duration,
+                        "statuses": status,
+                    }
+                }
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        """, (
-            "Unknown",              # receiver_first_name placeholder
-            "",                     # receiver_last_name
-            to_number,              # number
-            "",                     # company
-            "Auto-created via frontend call",  # description
-            "",                     # personal_notes
-            [call_sid],
-            [recording_sid],
-            [recording_url],
-            [recording_duration],
-            [status],
-        ))
-
-    conn.commit()
-    cur.close()
-    conn.close()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"DB update failed: {str(e)}")
+    else:
+        new_doc = {
+            "receiver_first_name": "Unknown",
+            "receiver_last_name": "",
+            "number": to_number,
+            "company": "",
+            "description": "Auto-created via frontend call",
+            "personal_notes": "",
+            "call_sids": [call_sid],
+            "recording_sids": [recording_sid],
+            "recording_urls": [recording_url],
+            "recording_durations": [recording_duration],
+            "statuses": [status],
+            "created_at": datetime.utcnow(),
+        }
+        try:
+            calls_collection.insert_one(new_doc)
+        except errors.DuplicateKeyError:
+            # race: another process inserted simultaneously — try update instead
+            calls_collection.update_one(
+                {"number": to_number},
+                {"$push": {
+                    "call_sids": call_sid,
+                    "recording_sids": recording_sid,
+                    "recording_urls": recording_url,
+                    "recording_durations": recording_duration,
+                    "statuses": status,
+                }}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"DB insert failed: {str(e)}")
 
     print("✅ Callback processed successfully and saved to DB.")
     return {"message": "Callback processed successfully"}
+
+
+# ========================
+# 📁 Excel Upload / Delete
+# ========================
+
+@app.post("/calls/upload_excel")
+async def upload_excel(file: UploadFile = File(...)):
+    """Upload an Excel sheet (.xlsx) and insert its rows into MongoDB."""
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Only .xlsx files are supported")
+
+    try:
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+
+        required_columns = ["receiver_first_name", "receiver_last_name", "number", "company", "description"]
+        for col in required_columns:
+            if col not in df.columns:
+                raise HTTPException(status_code=400, detail=f"Missing required column: {col}")
+
+        inserted = 0
+        for _, row in df.iterrows():
+            if not calls_collection.find_one({"number": str(row["number"])}):
+                doc = {
+                    "receiver_first_name": str(row["receiver_first_name"]),
+                    "receiver_last_name": str(row["receiver_last_name"]),
+                    "number": str(row["number"]),
+                    "company": str(row["company"]),
+                    "description": str(row["description"]),
+                    "personal_notes": str(row.get("personal_notes", "")),
+                    "call_sids": [],
+                    "recording_sids": [],
+                    "recording_urls": [],
+                    "recording_durations": [],
+                    "statuses": ["Not Called"],
+                    "created_at": datetime.utcnow(),
+                    "source": "excel_upload"
+                }
+                calls_collection.insert_one(doc)
+                inserted += 1
+
+        return {"message": f"{inserted} records inserted from Excel."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing Excel: {str(e)}")
+
+
+@app.delete("/calls/delete_excel")
+def delete_excel_records():
+    """Delete all records that were uploaded from Excel."""
+    result = calls_collection.delete_many({"source": "excel_upload"})
+    return {"message": f"{result.deleted_count} Excel-uploaded records deleted successfully."}
